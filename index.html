@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+      integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+      integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+      crossorigin=""
+    ></script>
+    <style>
+      #mymap {
+        height: 28em;
+      }
+    </style>
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>Where is the ISS?</h1>
+    <div id="mymap"></div>
+    <script>
+      // Create a map
+      const mymap = L.map("mymap").setView([0, 0], 1);
+
+      // Create a marker with a custom icon and place it on the map
+      const issIcon = L.icon({
+        iconUrl: "iss-transparent.png",
+        iconSize: [50, 32], // size of the icon
+        iconAnchor: [25, 16] // point of the icon which will correspond to marker's location
+      });
+      const marker = L.marker([0, 0], { icon: issIcon }).addTo(mymap);
+
+      const locationToolTip = L.tooltip();
+
+      // Adding a URL for the tiles and adding them to the map
+      const attribution =
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+      const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      const tiles = L.tileLayer(tileUrl, { attribution });
+      tiles.addTo(mymap);
+
+      const api_url = "https://api.wheretheiss.at/v1/satellites/25544";
+
+      let isFirstLoad = true;
+
+      async function getISS() {
+        const response = await fetch(api_url);
+        const data = await response.json();
+        const { latitude, longitude } = data;
+
+        marker.setLatLng([latitude, longitude]);
+
+        if (isFirstLoad) {
+          mymap.setView([latitude, longitude], 5);
+          isFirstLoad = false;
+        }
+
+        const locationString = `Latitude: ${latitude.toFixed(
+          2
+        )}&deg; Longitude: ${longitude.toFixed(2)}&deg;`;
+
+        marker.bindTooltip(locationString).openTooltip();
+      }
+
+      setInterval(() => {
+        getISS();
+      }, 1500);
+    </script>
+  </body>
+</html>
